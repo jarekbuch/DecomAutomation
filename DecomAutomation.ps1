@@ -60,7 +60,6 @@ Foreach ($s in $servers){
                 Foreach ($f in $fwd) {
                     $a = Get-DNSServerResourceRecord -ComputerName $d.domain -ZoneName $f.ZoneName -Name $s -ErrorAction SilentlyContinue| Select-Object HostName -ExpandProperty RecordData
                     If ($a) {
-                    #$line = $f.ZoneName + "`t" + $a.HostName + "`t" + $a.Ipv4Address + "`n"
                     $line = [pscustomobject] @{
                         "ZoneName"=$f.ZoneName;
                         "HostName"=$a.HostName;
@@ -69,7 +68,6 @@ Foreach ($s in $servers){
                 Foreach ($r in $rev) {
                     $ptr = Get-DNSServerResourceRecord -ComputerName $d.domain -ZoneName $r.ZoneName -RRType PTR -ErrorAction SilentlyContinue | Where-Object {$_.RecordData.PtrDomainName -like "*$s*"} | Select-Object HostName -ExpandProperty RecordData
                     If ($ptr) {
-                    #$line = $r.ZoneName + "`t" + $ptr.HostName + "`t" + $ptr.PtrDomainName + "`n"
                     $line = [pscustomobject] @{
                         "ZoneName"=$r.ZoneName;
                         "HostName"=$ptr.HostName;
