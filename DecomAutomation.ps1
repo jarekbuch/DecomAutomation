@@ -1,6 +1,5 @@
 ﻿Param(
     [Parameter(Mandatory=$true)] $ServerList,
-    [Parameter(Mandatory=$false)] [Switch]$Remove
     )
 
 $servers = Get-Content $ServerList
