@@ -1,5 +1,5 @@
 ﻿Param(
-    [Parameter(Mandatory=$true)] $ServerList,
+    [Parameter(Mandatory=$true)] $ServerList
     )
 
 $servers = Get-Content $ServerList
@@ -17,7 +17,7 @@ $environments = @(
 Foreach ($e in $environments){
 $credfile = Get-Item $env:UserProfile/DecomScriptCreds/$e.xml -ErrorAction SilentlyContinue
 If ((!$credfile) -or ($credfile.LastWriteTime -lt (Get-Date).AddDays(-1))){
-        $cred = Get-Credential -Message "Please enter credentials for the PRD environment"
+        $cred = Get-Credential -Message "Please enter credentials for the $e environment"
         $cred | Export-CliXml -Path $env:UserProfile/DecomScriptCreds/$e.xml 
 }}
 
