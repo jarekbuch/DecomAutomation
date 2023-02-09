@@ -1,4 +1,6 @@
-﻿Param(
+﻿Import-Module .\ConfigurationManager.psd1
+New-PSDrive -Name "P01" -PSProvider "CMSite" -Root "sccmprdcgy120.network.lan"
+Param(
     [Parameter(Mandatory=$true)] $ServerList
     )
 
@@ -74,12 +76,16 @@ Foreach ($s in $servers){
                         "RecordData"=$ptr.PtrDomainName}
                     $dnstbl += $line}}
             $sccmgrp = Get-ADPrincipalGroupMembership -Server $d.domain -Credential $d.cred -Identity $obj | Where-Object Name -like "SCCM*" | Select-Object Name
-            
+            Set-Path P01:
+            $sccmdev = Get-CMDevice -Name $s
+            If ($sccmdev){$found="Yes"}
+            Else {$found="No"}
             $line = [pscustomobject] @{
                 "Name"=$s;
                 "Domain"=$d.domain;
                 "DNS"=$dnstbl;
-                "SCCM"=$sccmgrp.Name}
+                "SCCM Patching Group"=$sccmgrp.Name;
+                "Device found in SCCM"=$found}
             $maintbl += $line
             }
             }
