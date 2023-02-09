@@ -1,10 +1,12 @@
-﻿Import-Module .\ConfigurationManager.psd1
-New-PSDrive -Name "P01" -PSProvider "CMSite" -Root "sccmprdcgy120.network.lan"
-Param(
+﻿Param(
     [Parameter(Mandatory=$true)] $ServerList
     )
 
 $servers = Get-Content $ServerList
+
+Import-Module "C:\Program Files (x86)\Microsoft Endpoint Manager\AdminConsole\bin\ConfigurationManager.psd1"
+
+New-PSDrive -Name "P01" -PSProvider "CMSite" -Root "sccmprdcgy120.network.lan" | Out-Null
 
 Write-Host "`n`n`n`n`n`n`n`n Checking credentials..." -ForegroundColor Yellow
 
@@ -55,6 +57,7 @@ Foreach ($s in $servers){
     Foreach ($d in $domaintbl){
         $obj = Get-AdComputer -Filter 'Name -eq $s' -Server $d.domain -Credential $d.cred
         If ($obj) {
+            If ($obj.DNSHostName -notlike "*sbx*"){
             $zones = Get-DNSServerZone -ComputerName $d.domain | Where-Object ZoneType -eq "Primary"
             $fwd = $zones | Where-Object IsReverseLookupZone -eq $false
             $rev = $zones | Where-Object IsReverseLookupZone -eq $true
@@ -74,9 +77,9 @@ Foreach ($s in $servers){
                         "ZoneName"=$r.ZoneName;
                         "HostName"=$ptr.HostName;
                         "RecordData"=$ptr.PtrDomainName}
-                    $dnstbl += $line}}
+                    $dnstbl += $line}}}
             $sccmgrp = Get-ADPrincipalGroupMembership -Server $d.domain -Credential $d.cred -Identity $obj | Where-Object Name -like "SCCM*" | Select-Object Name
-            Set-Path P01:
+            Set-Location P01:
             $sccmdev = Get-CMDevice -Name $s
             If ($sccmdev){$found="Yes"}
             Else {$found="No"}
@@ -100,6 +103,8 @@ If (($rem).ToLower() -eq "y"){
     Foreach ($i in $maintbl){
         Remove-ADComputer -Server $i.Domain -Credential ($domaintbl | Where-Object domain -eq $i.domain).cred -Identity $i.Name -Whatif
         Foreach ($d in $dns){Remove-DNSServerResourceRecord -ComputerName $i.domain -ZoneName $d.ZoneName -Name $d.HostName -Whatif}
+        Set-Location P01:
+        Get-CMDevice -Name $i | Remove-CMDevice -WhatIf
         }
         }
 
